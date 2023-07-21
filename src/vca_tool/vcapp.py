@@ -2,6 +2,7 @@
 from subprocess import run
 from pathlib import Path
 import sys, re
+import click
 
 PATH_VIRTUAL = "/usr/local/bin/virtual_v2.x"
 
@@ -88,22 +89,28 @@ def extract_mesh_size(pp_path):
     except:
         raise ValueError(f"Faild to find mesh size on {mesh_line} in {pp_path}")
     
-
-def main():
-    if len(sys.argv) < 4:
-        raise ValueError("Usage: python make_vcapp.py A.UPF B.UPF <x value [0:1] of Ax+B(1-x)>")
-    ppa=Path(sys.argv[1])
-    ppb=Path(sys.argv[2])
-    try:
-        x=(float(sys.argv[3]))
-    except:
-        raise ValueError(f"x value must be a float")
+@click.command()
+@click.argument('ppa')
+@click.argument('ppb')
+@click.argument('x', type=float)
+@click.option('--dest', '-o', default=None, help="Destination directory")
+@click.option('--virtual', '-v', default=None, help="Path to virtual_v2.x")
+@click.option('--precision', '-p', default=3, help="Precision of x value")
+def main(ppa,ppb,x, dest, virtual, precision):
+    # if len(sys.argv) < 4:
+    #     raise ValueError("Usage: python make_vcapp.py A.UPF B.UPF <x value [0:1] of Ax+B(1-x)>")
+    # ppa=Path(sys.argv[1])
+    # ppb=Path(sys.argv[2])
+    # try:
+    #     x=(float(sys.argv[3]))
+    # except:
+    #     raise ValueError(f"x value must be a float")
     
-    try:
-        dest=sys.argv[4]
-    except:
-        dest="./"
-    make_vcapp(ppa, ppb, x, dest=dest)
+    # try:
+    #     dest=sys.argv[4]
+    # except:
+    #     dest="./"
+    make_vcapp(ppa, ppb, x, dest=dest, path_virtual=virtual, precision=precision)
 
 if __name__ == "__main__":
     main()
