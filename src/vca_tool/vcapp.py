@@ -49,7 +49,7 @@ def make_vcapp(ppa_path, ppb_path, x:float, dest=None, path_virtual=None, precis
     created_name="NewPseudo.UPF"
     new_pp_name=f"{elem_a}_{elem_b}_{x}.UPF"
 
-    cwd=Path.cwd().absolute()
+    # cwd=Path.cwd().absolute()
 
     if dest.is_dir():
         new_pp_name=str(dest.absolute())+"/"+new_pp_name
@@ -67,9 +67,10 @@ def make_vcapp(ppa_path, ppb_path, x:float, dest=None, path_virtual=None, precis
     # Because UpfData in AiiDA does not accept "Xx" as element symbol,
     # we replace it with the symbol of element A
     command3 = f'sed -i -e "s/Xx/{elem_a}/g" {new_pp_name}'
-    run(command1, shell=True, cwd=cwd)
-    run(command2, shell=True, cwd=cwd)
-    run(command3, shell=True,cwd=cwd)
+    virtual_out=run(command1, shell=True, cwd=dest, capture_output=True, text=True).stdout
+    inspect_virtual(virtual_out)
+    run(command2, shell=True, cwd=dest)
+    run(command3, shell=True,cwd=dest)
     return new_pp_name
 
 def extract_mesh_size(pp_path):
@@ -88,6 +89,13 @@ def extract_mesh_size(pp_path):
         return int(mesh_size)
     except:
         raise ValueError(f"Faild to find mesh size on {mesh_line} in {pp_path}")
+    
+def inspect_virtual(out):
+    if "Error" in out:
+        if "different rinner" in out:
+            raise ValueError("Error in routine Virtual (3):\ndifferent rinner are not implemented (yet)")
+        else:
+            raise ValueError("Error in routine Virtual")
     
 @click.command()
 @click.argument('ppa')
