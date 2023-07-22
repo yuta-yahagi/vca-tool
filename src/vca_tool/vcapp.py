@@ -4,8 +4,6 @@ from pathlib import Path
 import sys, re
 import click
 
-PATH_VIRTUAL = "/usr/local/bin/virtual_v2.x"
-
 def make_vcapp(ppa_path, ppb_path, x:float, dest=None, path_virtual=None, precision=3):
 
     ppa=Path(ppa_path)
@@ -18,7 +16,12 @@ def make_vcapp(ppa_path, ppb_path, x:float, dest=None, path_virtual=None, precis
 
     # Get Path to "virtual_v2.x"
     if path_virtual is None:
-        path_virtual=Path(PATH_VIRTUAL)
+        # path_virtual=Path(PATH_VIRTUAL)
+        try:
+            path_virtual=run("which virtual_v2.x",shell=True, capture_output=True,text=True).stdout.strip()
+        except:
+            raise FileNotFoundError(f"virtual_v2.x not found. Please specify the path to virtual_v2.x")
+        path_virtual=Path(path_virtual)
     else:
         path_virtual=Path(path_virtual)
 
@@ -67,6 +70,7 @@ def make_vcapp(ppa_path, ppb_path, x:float, dest=None, path_virtual=None, precis
     # Because UpfData in AiiDA does not accept "Xx" as element symbol,
     # we replace it with the symbol of element A
     command3 = f'sed -i -e "s/Xx/{elem_a}/g" {new_pp_name}'
+    print(f"Run command {command1}")
     virtual_out=run(command1, shell=True, cwd=dest, capture_output=True, text=True).stdout
     inspect_virtual(virtual_out)
     run(command2, shell=True, cwd=dest)
