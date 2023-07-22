@@ -4,7 +4,7 @@ from pathlib import Path
 import sys, re
 import click
 
-def make_vcapp(ppa_path, ppb_path, x:float, dest=None, path_virtual=None, precision=3):
+def make_vcapp(ppa_path, ppb_path, x:float, dest=None, path_virtual=None, precision=3, absolute=True):
 
     ppa=Path(ppa_path)
     ppb=Path(ppb_path)
@@ -58,21 +58,40 @@ def make_vcapp(ppa_path, ppb_path, x:float, dest=None, path_virtual=None, precis
         new_pp_name=str(dest.absolute())+"/"+new_pp_name
         # created_name=str(dest.absolute())+"/"+created_name
 
+    if absolute:
+        # Because virtual_v2.x is sometime broken with absolute path, we convert it to relative path
+        path_a=ppa.absolute()
+        path_b=ppb.absolute()
+    else:
+        path_a=str(ppa)
+        path_b=str(ppb)
 
     # With VCA, for the reason of interpolation, mesh of PP_A should be larger than that of PP_B
-    size_a=extract_mesh_size(ppa)
-    size_b=extract_mesh_size(ppb)
-    if size_a > size_b:
-        command1 = f'echo "{ppa.absolute()}\n{ppb.absolute()}\n{x}" | {path_virtual.absolute()}'
-    else:
-        command1 = f'echo "{ppb.absolute()}\n{ppa.absolute()}\n{y}" | {path_virtual.absolute()}'
+    # NOT TRUE: It seems depending on a machine(?!) 
+
+    # size_a=extract_mesh_size(ppa)
+    # size_b=extract_mesh_size(ppb)
+    # if size_a > size_b:
+    #     command1 = f'echo "{path_a}\n{path_b}\n{x}" | {path_virtual.absolute()}'
+    # else:
+    #     command1 = f'echo "{path_b}\n{path_a}\n{y}" | {path_virtual.absolute()}'
+    
+    # Just run it twice
+    try:
+        command1 = f'echo "{path_a}\n{path_b}\n{x}" | {path_virtual.absolute()}'
+        virtual_out=run(command1, shell=True, cwd=dest, capture_output=True, text=True).stdout
+        inspect_virtual(virtual_out)
+    except:
+        command1 = f'echo "{path_b}\n{path_a}\n{y}" | {path_virtual.absolute()}'
+        virtual_out=run(command1, shell=True, cwd=dest, capture_output=True, text=True).stdout
+        inspect_virtual(virtual_out)
+        
+    print(f"Run command:\n {command1}")
+
     command2 = f'mv {created_name} {new_pp_name}'
     # Because UpfData in AiiDA does not accept "Xx" as element symbol,
     # we replace it with the symbol of element A
     command3 = f'sed -i -e "s/Xx/{elem_a}/g" {new_pp_name}'
-    print(f"Run command {command1}")
-    virtual_out=run(command1, shell=True, cwd=dest, capture_output=True, text=True).stdout
-    inspect_virtual(virtual_out)
     run(command2, shell=True, cwd=dest)
     run(command3, shell=True,cwd=dest)
     return new_pp_name
@@ -108,7 +127,8 @@ def inspect_virtual(out):
 @click.option('--dest', '-o', default=None, help="Destination directory")
 @click.option('--virtual', '-v', default=None, help="Path to virtual_v2.x")
 @click.option('--precision', '-p', default=3, help="Precision of x value")
-def main(ppa,ppb,x, dest, virtual, precision):
+@click.option('--absolute/--relative', '-a/-r', help="Use absolute path or relative path", default=True)
+def main(ppa,ppb,x, dest, virtual, precision, absolute):
     # if len(sys.argv) < 4:
     #     raise ValueError("Usage: python make_vcapp.py A.UPF B.UPF <x value [0:1] of Ax+B(1-x)>")
     # ppa=Path(sys.argv[1])
@@ -122,7 +142,7 @@ def main(ppa,ppb,x, dest, virtual, precision):
     #     dest=sys.argv[4]
     # except:
     #     dest="./"
-    make_vcapp(ppa, ppb, x, dest=dest, path_virtual=virtual, precision=precision)
+    make_vcapp(ppa, ppb, x, dest=dest, path_virtual=virtual, precision=precision, absolute=absolute)
 
 if __name__ == "__main__":
     main()
