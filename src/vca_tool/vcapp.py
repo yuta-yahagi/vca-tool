@@ -4,10 +4,7 @@ from pathlib import Path
 import sys, re
 import click
 
-def make_vcapp(ppa_path, ppb_path, x:float, dest=None, path_virtual=None, precision=3, absolute=True):
-
-    ppa=Path(ppa_path)
-    ppb=Path(ppb_path)
+def make_vcapp(ppa, ppb, x:float, dest=None, path_virtual=None, precision=3, location=True):
 
     if dest is None:
         dest=Path.cwd()
@@ -27,10 +24,20 @@ def make_vcapp(ppa_path, ppb_path, x:float, dest=None, path_virtual=None, precis
 
     if not path_virtual.exists():
         raise FileNotFoundError(f"virtual_v2.x not found at {path_virtual.absolute()}")
-    if not ppa.exists():
-        raise FileNotFoundError(f"PP {ppa.absolute()} not found")
-    if not ppb.exists():
-        raise FileNotFoundError(f"PP {ppb.absolute()} not found")
+    if location:
+        # Because virtual_v2.x is sometime broken with absolute path, we convert it to relative path
+        path_a=Path(ppa).absolute()
+        path_b=Path(ppb).absolute()
+        if not path_a.exists():
+            raise FileNotFoundError(f"PP {path_a.absolute()} not found")
+        if not path_b.exists():
+            raise FileNotFoundError(f"PP {path_b.absolute()} not found")
+                # Because virtual_v2.x is sometime broken with absolute path, we convert it to relative path
+        path_a=Path(ppa).absolute()
+        path_b=Path(ppb).absolute()
+    else:
+        path_a=str(ppa)
+        path_b=str(ppb)
 
     if x<=0.0 or x>1:
         raise ValueError(f"x value must be in (0:1]")
@@ -38,14 +45,14 @@ def make_vcapp(ppa_path, ppb_path, x:float, dest=None, path_virtual=None, precis
     x='{:.3f}'.format(round(x, 3)).rstrip('0').rstrip('.')
 
     element_pattern = r'([A-Za-z]{1,2})'
-    elem_a = re.match(element_pattern, ppa.name)
+    elem_a = re.match(element_pattern, ppa)
     if elem_a is None:
-        raise ValueError(f"Invalid PP name {ppa.name}")
+        raise ValueError(f"Invalid PP name {ppa}")
     elem_a = elem_a.group(1)
 
-    elem_b = re.match(element_pattern, ppb.name)
+    elem_b = re.match(element_pattern, ppb)
     if elem_b is None:
-        raise ValueError(f"Invalid PP name {ppb.name}")
+        raise ValueError(f"Invalid PP name {ppb}")
     elem_b = elem_b.group(1)
 
     # run(["echo",ppa,ppb,x])
@@ -57,14 +64,6 @@ def make_vcapp(ppa_path, ppb_path, x:float, dest=None, path_virtual=None, precis
     if dest.is_dir():
         new_pp_name=str(dest.absolute())+"/"+new_pp_name
         # created_name=str(dest.absolute())+"/"+created_name
-
-    if absolute:
-        # Because virtual_v2.x is sometime broken with absolute path, we convert it to relative path
-        path_a=ppa.absolute()
-        path_b=ppb.absolute()
-    else:
-        path_a=str(ppa)
-        path_b=str(ppb)
 
     # With VCA, for the reason of interpolation, mesh of PP_A should be larger than that of PP_B
     # NOT TRUE: It seems depending on a machine(?!) 
@@ -85,7 +84,7 @@ def make_vcapp(ppa_path, ppb_path, x:float, dest=None, path_virtual=None, precis
         command1 = f'echo "{path_b}\n{path_a}\n{y}" | {path_virtual.absolute()}'
         virtual_out=run(command1, shell=True, cwd=dest, capture_output=True, text=True).stdout
         inspect_virtual(virtual_out)
-        
+
     print(f"Run command:\n {command1}")
 
     command2 = f'mv {created_name} {new_pp_name}'
@@ -127,8 +126,8 @@ def inspect_virtual(out):
 @click.option('--dest', '-o', default=None, help="Destination directory")
 @click.option('--virtual', '-v', default=None, help="Path to virtual_v2.x")
 @click.option('--precision', '-p', default=3, help="Precision of x value")
-@click.option('--absolute/--relative', '-a/-r', help="Use absolute path or relative path", default=True)
-def main(ppa,ppb,x, dest, virtual, precision, absolute):
+@click.option('--location/--name', '-l/-n', help="Use location (path) to PP or name of it", default=True)
+def main(ppa,ppb,x, dest, virtual, precision, location):
     # if len(sys.argv) < 4:
     #     raise ValueError("Usage: python make_vcapp.py A.UPF B.UPF <x value [0:1] of Ax+B(1-x)>")
     # ppa=Path(sys.argv[1])
@@ -142,7 +141,7 @@ def main(ppa,ppb,x, dest, virtual, precision, absolute):
     #     dest=sys.argv[4]
     # except:
     #     dest="./"
-    make_vcapp(ppa, ppb, x, dest=dest, path_virtual=virtual, precision=precision, absolute=absolute)
+    make_vcapp(ppa, ppb, x, dest=dest, path_virtual=virtual, precision=precision, location=location)
 
 if __name__ == "__main__":
     main()
