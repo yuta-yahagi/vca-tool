@@ -85,7 +85,7 @@ def make_vcapp(ppa, ppb, x:float, dest=None, path_virtual=None, precision=3, loc
         virtual_out=run(command1, shell=True, cwd=dest, capture_output=True, text=True).stdout
         inspect_virtual(virtual_out)
 
-    print(f"Run command:\n {command1}")
+    # print(f"Run command:\n {command1}")
 
     command2 = f'mv {created_name} {new_pp_name}'
     # Because UpfData in AiiDA does not accept "Xx" as element symbol,
