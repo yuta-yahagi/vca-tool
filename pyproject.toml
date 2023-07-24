@@ -4,7 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name="vca-tool"
-version="0.1.2"
+version="0.1.3"
 description="A tool for making virtual crystal approximation pseudo-potentials on Quantum Espresso"
 authors=[{name='Yuta Yahagi', email='yuta-yahagi@nec.com'}]
 license={file = 'LICENSE.txt'}
