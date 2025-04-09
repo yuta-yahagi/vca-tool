@@ -16,6 +16,7 @@ def make_vcapp(ppa, ppb, x:float, fname=None, path_virtual=None):
         # Try to find virtual_v2.x in the system path
         try:
             path_virtual=run("which virtual_v2.x",shell=True, capture_output=True,text=True).stdout.strip()
+            path_virtual=Path(path_virtual)
         except:
             raise FileNotFoundError(f"virtual_v2.x not found. Please specify the path to virtual_v2.x")
     if not path_virtual.exists():
@@ -50,12 +51,17 @@ def make_vcapp(ppa, ppb, x:float, fname=None, path_virtual=None):
 
     # run(["echo",ppa,ppb,x])
     created_name="NewPseudo.UPF"
+    default_name=f"{elem_a}_{elem_b}_{x}.UPF"
 
     if fname is None:
-        fname=Path.cwd()
+        dest=Path.cwd()
+        fname=default_name
+
     if Path(fname).is_dir():
-        dest = fname
-        fname=fname + f"/{elem_a}_{elem_b}_{x}.UPF"
+        if not fname.exists():
+            os.makedirs(fname)
+        dest = Path(fname).absolute()
+        fname=default_name
     else:
         dest = Path(fname).parent
         fname=fname.replace("$A", elem_a)
@@ -92,7 +98,9 @@ def make_vcapp(ppa, ppb, x:float, fname=None, path_virtual=None):
     # Because UpfData in AiiDA does not accept "Xx" as element symbol,
     # we replace it with the symbol of element A
     command3 = f'sed -i -e "s/Xx/{elem_a}/g" {fname}'
+    print(f"Running command: {command2}")
     run(command2, shell=True, cwd=dest)
+    print(f"Running command: {command3}")
     run(command3, shell=True,cwd=dest)
     return fname
 
