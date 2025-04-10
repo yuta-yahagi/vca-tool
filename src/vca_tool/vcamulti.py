@@ -31,8 +31,8 @@ def combinatorial_list(elements, n_components=None, max_num=10):
             total_weight = sum(weights)
             if total_weight != max_num:
                 continue
-            if math.gcd(*weights) != 1:
-                continue
+            # if math.gcd(*weights) != 1:
+            #     continue
             results.append((combo, weights))
     return results
 
@@ -41,6 +41,10 @@ def multiple_vca(pseudos, outdir=None, remove_tmp=True, path_virtual=None,
                   n_components=None, max_num=10):
     if outdir is None:
         outdir = Path.cwd()
+    else:
+        outdir = Path(outdir)
+        if not outdir.exists():
+            os.makedirs(outdir)
 
     elements = [match_element_name(p) for p in pseudos]
     comb_list=combinatorial_list(elements, n_components=n_components, max_num=max_num)
@@ -58,14 +62,14 @@ def multiple_vca(pseudos, outdir=None, remove_tmp=True, path_virtual=None,
             fname=outdir/f"{A+B}.UPF"
             print(A,B,f"{x:.3f}",fname)
             if fname_old is None:
-                # make_vcapp(ppa,ppb,x,fname=fname, path_virtual=path_virtual)
-                print(f"make_vcapp({ppa},{ppb},{x:.3f},fname={fname}, path_virtual={path_virtual})")
+                # print(f"make_vcapp({ppa},{ppb},{x:.3f},fname={fname}, path_virtual={path_virtual})")
+                make_vcapp(ppa,ppb,x,fname=str(fname), path_virtual=path_virtual)
             else:
-                print(f"make_vcapp({ppa},{ppb},{x:.3f},fname={fname}, path_virtual={path_virtual})")
-                # make_vcapp(fname_old,ppb,x,fname=fname, path_virtual=path_virtual)
+                # print(f"make_vcapp({ppa},{ppb},{x:.3f},fname={fname}, path_virtual={path_virtual})")
+                make_vcapp(fname_old,ppb,x,fname=str(fname), path_virtual=path_virtual)
                 if remove_tmp:
                     print(f"remove {fname_old}")
-                #     os.remove(fname_old)
+                    os.remove(fname_old)
             fname_old=fname
             A += B
 

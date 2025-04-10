@@ -65,7 +65,8 @@ def make_vcapp(ppa, ppb, x:float, fname=None, path_virtual=None):
         dest = Path(fname).absolute()
         fname=default_name
     else:
-        dest = Path(fname).parent
+        dest = Path(fname).absolute().parent
+        fname= Path(fname).name
         fname=fname.replace("$A", elem_a)
         fname=fname.replace("$B", elem_b)
         fname=fname.replace("$x", x)
