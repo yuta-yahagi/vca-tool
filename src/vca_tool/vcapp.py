@@ -4,7 +4,7 @@ from pathlib import Path
 import sys, os, re
 import click
 
-def match_element_name(name):
+def match_element_name(name:str):
     """
     Match the element name in the UPF file.
     """
@@ -48,8 +48,8 @@ def make_vcapp(ppa, ppb, x:float, fname=None, path_virtual=None):
     x='{:.3f}'.format(round(x, 3)).rstrip('0').rstrip('.')
 
 
-    elem_a = match_element_name(ppa)
-    elem_b = match_element_name(ppb)
+    elem_a = match_element_name(Path(ppa).stem)
+    elem_b = match_element_name(Path(ppb).stem)
 
     # run(["echo",ppa,ppb,x])
     created_name="NewPseudo.UPF"
