@@ -4,6 +4,17 @@ from pathlib import Path
 import sys, os, re
 import click
 
+def match_element_name(name):
+    """
+    Match the element name in the UPF file.
+    """
+    element_pattern = r'([A-Za-z]{1,2})'
+    match = re.match(element_pattern, name)
+    if match:
+        return match.group(1)
+    else:
+        raise ValueError(f"Invalid PP name {name}")
+
 def make_vcapp(ppa, ppb, x:float, fname=None, path_virtual=None):
 
     # Get Path to "virtual_v2.x"
@@ -36,18 +47,9 @@ def make_vcapp(ppa, ppb, x:float, fname=None, path_virtual=None):
     y=1.0-x
     x='{:.3f}'.format(round(x, 3)).rstrip('0').rstrip('.')
 
-    element_pattern = r'([A-Za-z]{1,2})'
-    elem_a = re.match(element_pattern, ppa)
-    if elem_a is None:
-        raise ValueError(f"Invalid PP name {ppa}")
-    elem_a = elem_a.group(1)
 
-    elem_b = re.match(element_pattern, ppb)
-    if elem_b is None:
-        raise ValueError(f"Invalid PP name {ppb}")
-    elem_b = elem_b.group(1)
-
-
+    elem_a = match_element_name(ppa)
+    elem_b = match_element_name(ppb)
 
     # run(["echo",ppa,ppb,x])
     created_name="NewPseudo.UPF"
